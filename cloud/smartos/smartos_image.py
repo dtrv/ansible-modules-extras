@@ -23,13 +23,13 @@
 
 DOCUMENTATION = '''
 ---
-module: imgadm_image
+module: smartos_image
 short_description: Manage SmartOS virtual machine images.
 description:
     - Import and manage virtual machine images (datasets) on a SmartOS system. 
-    - This module uses the C(imgadm import), C(imgadm delete), C(imgadm get) - 
-      which is C(imgadm info) - and C(imgadm update). For detailed information 
-      see its manual page on U(https://smartos.org/man/1m/imgadm).
+    - This module uses the C(imgadm import), C(imgadm delete), C(imgadm info)  
+      and C(imgadm update). For detailed information see its manual page
+      on U(https://smartos.org/man/1m/imgadm).
     - The management of image sources is not part of this module.
 version_added: "2.3"
 author: Thomas Verchow (@dtrv)
@@ -63,16 +63,16 @@ options:
 
 EXAMPLES = '''
 # Import 'debian-8' image 
-imgadm: uuid=d183f500-9a96-11e6-8976-ff3967dc023a
+smartos_image: uuid=d183f500-9a96-11e6-8976-ff3967dc023a
 
-# Import and/or update 'debian-8' image 
-imgadm: uuid=d183f500-9a96-11e6-8976-ff3967dc023a update=True
+# Import or update 'debian-8' image 
+smartos_image: uuid=d183f500-9a96-11e6-8976-ff3967dc023a update=True
 
 # Import 'debian-8' image into pool 'newpool'
-imgadm: uuid=d183f500-9a96-11e6-8976-ff3967dc023a zpool=newpool
+smartos_image: uuid=d183f500-9a96-11e6-8976-ff3967dc023a zpool=newpool
 
 # Delete 'debian-8' image
-imgadm: uuid=d183f500-9a96-11e6-8976-ff3967dc023a state=absent
+smartos_image: uuid=d183f500-9a96-11e6-8976-ff3967dc023a state=absent
 '''
 
 RETURN = '''
@@ -95,7 +95,7 @@ manifest:
     description: JSON manifest of image with lots of information in it.
     returnd: If image is present.
     type: json
-    sample: "{ cpu_type: ..., description: ..., ... }"
+    sample: "{ name: ..., description: ..., ... }"
 '''
 
 import re
@@ -208,7 +208,7 @@ def main():
 # ---------------------------------------------------------
     if not image.zpool_exists():
         module.fail_json(
-            msg = 'zpool not available', 
+            msg = 'zpool is not available.', 
             uuid = image.uuid, 
             zpool = image.zpool)
 
@@ -218,7 +218,7 @@ def main():
 
         if module.check_mode:
             if image.is_local():
-                out = 'Image %s (%s) is already installed, skipping' % (image.uuid, image.manifest['name'])
+                out = 'Image %s (%s) is already installed, skipping.' % (image.uuid, image.manifest['name'])
             else:
                 result['changed'] = True
                 result['manifest'] = json.loads('{ "faked": "True", "reason": "check_mode" }')
@@ -254,14 +254,14 @@ def main():
                 (rc, out, err) = image.delete()
                 if rc != 0:
                     module.fail_json(
-                        msg = 'Error while deleting image!', 
+                        msg = 'Error deleting image!', 
                         uuid = image.uuid, 
                         zpool = image.zpool, 
                         rc = rc, 
                         stderr = str(err), 
                         stdout = str(out))
         else:
-            out = 'image "%s" was not found on zpool "%s"' % (image.uuid, image.zpool)
+            out = 'Image "%s" was not found on zpool "%s".' % (image.uuid, image.zpool)
 
 # ---------------------------------------------------------
     result['stdout']   = str(out)
